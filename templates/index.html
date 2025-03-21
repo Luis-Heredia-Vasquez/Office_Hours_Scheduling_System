@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Hours Scheduler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .link-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .link-container a {
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        .link-container a:hover {
+            text-decoration: underline;
+        }
+        /* Flash Messages Styling */
+        .flash-messages {
+            list-style: none;
+            padding: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .flash-messages li {
+            padding: 12px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .flash-messages .success {
+            background-color: #28a745;
+            color: white;
+        }
+        .flash-messages .info {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .logout {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        .logout a {
+            color: red;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .logout a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logout">
+            <a href="{{ url_for('logout') }}">🚪 Logout</a>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <h1>📅 Office Hours Scheduler</h1>
+
+        <h2>Actions</h2>
+        <div class="link-container">
+            <a href="/professors">View Professors & Office Hours</a>
+            <a href="/appointments">See Current Appointments</a>
+        </div>
+
+
+        <h2>Available Time Slots</h2>
+        {% for name, slots in available_slots.items() %}
+            <h3>{{ name }}</h3>
+            {% if slots %}
+                <ul>
+                    {% for slot in slots %}
+                        <li>{{ slot }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No available slots</p>
+            {% endif %}
+        {% endfor %}
+
+        <h2>Book an Appointment</h2>
+        <form action="/book" method="post">
+            <div class="form-group">
+                <label for="professor">Professor:</label>
+                <select name="professor" required>
+                    {% for name in professors.keys() %}
+                        <option value="{{ name }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="student_name">Your Name:</label>
+                <input type="text" name="student_name" required placeholder="Enter your name">
+            </div>
+
+            <div class="form-group">
+                <label for="day">Day:</label>
+                <input type="text" name="day" required placeholder="e.g., Monday">
+            </div>
+
+            <div class="form-group">
+                <label for="time">Time:</label>
+                <input type="text" name="time" required placeholder="e.g., 4PM">
+            </div>
+
+            <button type="submit">Book</button>
+        </form>
+
+        <h2>Cancel an Appointment</h2>
+        <form action="/cancel" method="post">
+            <div class="form-group">
+                <label for="professor">Professor:</label>
+                <select name="professor" required>
+                    {% for name in professors.keys() %}
+                        <option value="{{ name }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="student_name">Your Name:</label>
+                <input type="text" name="student_name" required placeholder="Enter your name">
+            </div>
+
+            <div class="form-group">
+                <label for="day">Day:</label>
+                <input type="text" name="day" required placeholder="e.g., Monday">
+            </div>
+
+            <div class="form-group">
+                <label for="time">Time:</label>
+                <input type="text" name="time" required placeholder="e.g., 4PM">
+            </div>
+
+            <button type="submit">Cancel</button>
+        </form>
+    </div>
+</body>
+</html>

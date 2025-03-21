@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professors' Office Hours</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+        }
+        .professor-list {
+            list-style: none;
+            padding: 0;
+        }
+        .professor-list li {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Professors' Office Hours</h2>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        
+        <ul class="professor-list">
+            {% for professor, details in professors.items() %}
+                <li>
+                    <h3>{{ professor }}</h3>
+                    <p>Email: {{ details.email }}</p>
+                    <p><strong>Office Hours:</strong></p>
+                    {% if professor == "Dr. Smith" %}
+                        <p>Monday & Wednesday: 2PM - 5PM</p>
+                    {% elif professor == "Dr. Lee" %}
+                        <p>Tuesday & Thursday: 10AM - 3PM</p>
+                    {% else %}
+                        <p>No office hours available</p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canceled Appointments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+        }
+        .canceled-list {
+            list-style: none;
+            padding: 0;
+        }
+        .canceled-list li {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Canceled Appointments</h2>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        
+        <ul class="canceled-list">
+            {% for professor, canceled in canceled_data.items() %}
+                <h3>{{ professor }}</h3>
+                {% if canceled %}
+                    <ul>
+                        {% for student, time_slot in canceled %}
+                            <li>{{ student }} - {{ time_slot }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No canceled appointments</p>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
