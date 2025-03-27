@@ -20,14 +20,6 @@ def init_db():
                 email TEXT UNIQUE NOT NULL
             )
         ''')
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS appointments (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                student_name TEXT NOT NULL,
-                professor_name TEXT NOT NULL,
-                time_slot TEXT NOT NULL
-            )
-        ''')
         conn.commit()
 
 # Appointment Data Structures
