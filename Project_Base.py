@@ -3,7 +3,7 @@ import sqlite3
 from functools import wraps
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = 'GroupProject'
 
 DB = 'appointments.db'
 
