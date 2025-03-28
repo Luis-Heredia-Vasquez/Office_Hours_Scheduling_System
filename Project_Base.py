@@ -71,7 +71,7 @@ class AppointmentList:
                 waitlisted_student, waitlisted_time_slot = self.waitlist.pop(0)
                 if waitlisted_time_slot.lower() == time_slot.lower():
                     self.book(waitlisted_student, waitlisted_time_slot, schedule)
-                    return "Canceled & Rebooked from Waitlist"
+                    return "Your appointment was canceled. A waitlisted student has been booked for that time slot."
                 else:
                     self.waitlist.append((waitlisted_student, waitlisted_time_slot))
         return "Canceled"
@@ -90,7 +90,7 @@ professors = {
     }
 }
 
-# Login required decorator
+# Login required 
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
