@@ -75,6 +75,21 @@ class AppointmentList:
                 else:
                     self.waitlist.append((waitlisted_student, waitlisted_time_slot))
         return "Canceled"
+    def undo_cancel(self, student_name, schedule):
+        if not self.canceled_stack:
+            return "No canceled appointments to undo."
+
+         # Peek at the top of the stack
+        last_student, last_time = self.canceled_stack[-1]
+
+        if last_student.lower() != student_name.lower():
+             return "You can only undo your own cancellations."
+
+        # Pop and rebook
+        self.canceled_stack.pop()
+        result = self.book(student_name, last_time, schedule)
+        return f"Undo successful: {result} for {student_name} at {last_time}"
+
 
 # Professors
 professors = {
@@ -208,6 +223,25 @@ def cancel_appointment():
     result = professors[professor_name]['appointments'].cancel(student_name, time_slot, professors[professor_name]['schedule'])
     flash(f"Appointment {result} for {student_name} at {time_slot}", "info")
     return redirect(url_for('index'))
+
+@app.route('/undo_cancel')
+@login_required
+def undo_cancel():
+    student_name = session['username']
+
+    for professor, details in professors.items():
+        result = details['appointments'].undo_cancel(student_name, details['schedule'])
+
+        if result.startswith("Undo successful"):
+            flash(result, "success")
+            return redirect(url_for('index'))
+        elif result != "No canceled appointments to undo.":  # only show specific errors
+            flash(result, "danger")
+            return redirect(url_for('index'))
+
+    flash("No canceled appointments to undo.", "info")
+    return redirect(url_for('index'))
+
 
 @app.route('/appointments')
 @login_required

@@ -192,6 +192,10 @@
 
             <button type="submit">Cancel</button>
         </form>
+        <h2>Undo Last Cancellation</h2>
+        <form action="{{ url_for('undo_cancel') }}" method="get">
+            <button type="submit">Undo Last Cancel</button>
+        </form>
     </div>
 </body>
 </html>
