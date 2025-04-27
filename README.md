@@ -19,6 +19,9 @@ This app uses custom-built data structures to manage appointment logic:
 - **Linked List**: to store active appointments for each professor.
 - **Queue (FIFO)**: to manage a waitlist of students.
 - **Stack (LIFO)**: to track canceled appointments for possible restoration or review.
+- **Hashtable (Dictionary)**: to map each professor’s name to their appointments, schedule, and contact information.
+
+
 
 ## 🗂 Technologies
 
