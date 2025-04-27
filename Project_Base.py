@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 from functools import wraps
-
-app = Flask(__name__)
+app = Flask(__name__, template_folder='frontend')
 app.secret_key = 'GroupProject'
 
 DB = 'appointments.db'
