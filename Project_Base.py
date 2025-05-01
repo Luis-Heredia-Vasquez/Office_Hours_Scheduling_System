@@ -134,7 +134,7 @@ class AppointmentList:
         if slot_key in self.waitlist and not self.waitlist[slot_key].is_empty():
             next_student = self.waitlist[slot_key].dequeue()
             self.book(next_student, time_slot, schedule)
-            return f"Your appointment was canceled. {next_student} from the waitlist has been booked for {time_slot}."
+            return f"Your appointment was canceled. {next_student} from the waitlist has been booked."
         else:
             return "Canceled"
 
@@ -274,12 +274,12 @@ def book_appointment():
 
     # Check if time slot is valid
     if time_slot.lower() not in professor_info['valid_slots']:
-        flash(f"Appointment: Invalid Time Slot for {student_name} at {time_slot}", "danger")
+        flash(f"Appointment: Invalid time slot for {student_name} on {time_slot}", "danger")
         return redirect(url_for('index'))
 
     # Attempt to book the appointment
     result = professor_info['appointments'].book(student_name, time_slot, professor_info)
-    flash(f"Appointment {result} for {student_name} at {time_slot}", "success")
+    flash(f"Appointment {result} for {student_name} on {time_slot}", "success")
     return redirect(url_for('index'))
 
 
@@ -296,7 +296,7 @@ def cancel_appointment():
     professor_info = professors[professor_name]
 
     result = professor_info['appointments'].cancel(student_name, time_slot, professor_info)
-    flash(f"Appointment: {result} at {time_slot}", "info")
+    flash(f"Appointment: {result} on {time_slot}", "info")
     return redirect(url_for('index'))
 
 
