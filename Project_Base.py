@@ -130,12 +130,13 @@ class AppointmentList:
         self.canceled_stack.append((student_name, time_slot))
 
         # Promote from waitlist
+       
         if slot_key in self.waitlist and not self.waitlist[slot_key].is_empty():
             next_student = self.waitlist[slot_key].dequeue()
             self.book(next_student, time_slot, schedule)
-            return f"Your appointment was canceled. A student from the waitlist has been booked for {time_slot}."
-
-        return "Canceled"
+            return f"Your appointment was canceled. {next_student} from the waitlist has been booked for {time_slot}."
+        else:
+            return "Canceled"
 
     def undo_cancel(self, student_name, schedule):
         if not self.canceled_stack:
@@ -287,17 +288,20 @@ def book_appointment():
 def cancel_appointment():
     student_name = session['username']
     professor_name = request.form['professor']
-    day = request.form['day'].strip().capitalize()
-    time = request.form['time'].strip().upper()
-
-    time_slot = f"{day} {time}"
+    time_slot = request.form['time_slot'].strip()
 
     professor_info = professors[professor_name]
-
     result = professor_info['appointments'].cancel(student_name, time_slot, professor_info)
-    flash(f"Appointment: {result} at {time_slot}", "info")
-    return redirect(url_for('index'))
 
+    # Distinguish waitlist promotions
+    if "from the waitlist" in result.lower():
+        flash(f"Waitlist Update: {result}", "info")
+    elif "canceled" in result.lower():
+        flash(f"Appointment Canceled: {result}", "warning")
+    else:
+        flash(f"Appointment: {result}", "danger")
+
+    return redirect(url_for('index'))
 
 
 @app.route('/undo_cancel')
