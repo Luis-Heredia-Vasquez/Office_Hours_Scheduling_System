@@ -133,7 +133,7 @@ class AppointmentList:
         if slot_key in self.waitlist and not self.waitlist[slot_key].is_empty():
             next_student = self.waitlist[slot_key].dequeue()
             self.book(next_student, time_slot, schedule)
-            return f"Your appointment was canceled. {next_student} from the waitlist has been booked for {time_slot}."
+            return f"Your appointment was canceled. A student from the waitlist has been booked for {time_slot}."
 
         return "Canceled"
 
@@ -172,7 +172,7 @@ professors = {
 # Add valid_slots lookup table
 for prof in professors.values():
     prof['valid_slots'] = {s.lower(): True for s in prof['schedule']}
-    
+
 # Login required 
 def login_required(f):
     @wraps(f)
