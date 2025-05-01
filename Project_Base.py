@@ -288,20 +288,17 @@ def book_appointment():
 def cancel_appointment():
     student_name = session['username']
     professor_name = request.form['professor']
-    time_slot = request.form['time_slot'].strip()
+    day = request.form['day'].strip().capitalize()
+    time = request.form['time'].strip().upper()
+
+    time_slot = f"{day} {time}"
 
     professor_info = professors[professor_name]
+
     result = professor_info['appointments'].cancel(student_name, time_slot, professor_info)
-
-    # Distinguish waitlist promotions
-    if "from the waitlist" in result.lower():
-        flash(f"Waitlist Update: {result}", "info")
-    elif "canceled" in result.lower():
-        flash(f"Appointment Canceled: {result}", "warning")
-    else:
-        flash(f"Appointment: {result}", "danger")
-
+    flash(f"Appointment: {result} at {time_slot}", "info")
     return redirect(url_for('index'))
+
 
 
 @app.route('/undo_cancel')
