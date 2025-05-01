@@ -257,6 +257,7 @@ def index():
                            professors=professors,
                            available_slots=available_slots,
                            user_appointments=user_appointments)
+
 @app.route('/book', methods=['POST'])
 @login_required
 def book_appointment():
@@ -272,7 +273,7 @@ def book_appointment():
 
     # Check if time slot is valid
     if time_slot.lower() not in professor_info['valid_slots']:
-        flash(f"Appointment Invalid Time Slot for {student_name} at {time_slot}", "danger")
+        flash(f"Appointment: Invalid Time Slot for {student_name} at {time_slot}", "danger")
         return redirect(url_for('index'))
 
     # Attempt to book the appointment
@@ -294,7 +295,7 @@ def cancel_appointment():
     professor_info = professors[professor_name]
 
     result = professor_info['appointments'].cancel(student_name, time_slot, professor_info)
-    flash(f"Appointment {result} for {student_name} at {time_slot}", "info")
+    flash(f"Appointment: {result} at {time_slot}", "info")
     return redirect(url_for('index'))
 
 
