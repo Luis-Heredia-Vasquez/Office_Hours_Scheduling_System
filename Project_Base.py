@@ -134,7 +134,7 @@ class AppointmentList:
         if slot_key in self.waitlist and not self.waitlist[slot_key].is_empty():
             next_student = self.waitlist[slot_key].dequeue()
             self.book(next_student, time_slot, schedule)
-            return f"Your appointment was canceled. {next_student} from the waitlist has been booked."
+            return f"Your appointment was canceled. {next_student} from the waitlist has been booked"
         else:
             return "Canceled"
 
@@ -148,7 +148,7 @@ class AppointmentList:
 
         self.canceled_stack.pop()
         result = self.book(student_name, last_time, schedule)
-        return f"Undo successful: {result} for {student_name} at {last_time}"
+        return f"Undo successful: {result} for {student_name} on {last_time}"
 
 # Professors
 professors = {
@@ -279,7 +279,7 @@ def book_appointment():
 
     # Attempt to book the appointment
     result = professor_info['appointments'].book(student_name, time_slot, professor_info)
-    flash(f"Appointment {result} for {student_name} on {time_slot}", "success")
+    flash(f"Appointment: {result} for {student_name} on {time_slot}", "success")
     return redirect(url_for('index'))
 
 
