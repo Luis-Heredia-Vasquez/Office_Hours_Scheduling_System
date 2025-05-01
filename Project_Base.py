@@ -22,91 +22,157 @@ def init_db():
         conn.commit()
 
 # Appointment Data Structures
+# Appointment Node
 class AppointmentNode:
-    """Node for linked list of appointments."""
     def __init__(self, student_name, time_slot):
         self.student_name = student_name
         self.time_slot = time_slot
-        self.next = None 
+        self.next = None
 
+# Queue for Waitlist
+class Queue:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+
+    def enqueue(self, student_name):
+        new_node = AppointmentNode(student_name, None)
+        if self.tail:
+            self.tail.next = new_node
+        self.tail = new_node
+        if not self.head:
+            self.head = new_node
+
+    def dequeue(self):
+        if not self.head:
+            return None
+        student_name = self.head.student_name
+        self.head = self.head.next
+        if not self.head:
+            self.tail = None
+        return student_name
+
+    def is_empty(self):
+        return self.head is None
+
+# AppointmentList with O(1) cancel support
 class AppointmentList:
     def __init__(self):
         self.head = None
-        self.waitlist = [] # Waitlist for students (FIFO)
-        self.canceled_stack = [] # Stack for canceled appointments(LIFO)
+        self.tail = None
+        self.booked_slots = {}  # time_slot.lower() -> AppointmentNode
+        self.student_slot_map = {}  # (student.lower(), time.lower()) -> AppointmentNode
+        self.prev_node_map = {}  # (student.lower(), time.lower()) -> previous node
+        self.waitlist = {}  # time_slot.lower() -> Queue
+        self.canceled_stack = []  # stack of (student_name, time_slot)
 
     def book(self, student_name, time_slot, schedule):
-        # Check if the time slot is valid
-        if time_slot.lower() not in [s.lower() for s in schedule]:
-            return "Invalid Time Slot"
-        # Check if the time slot is already booked
-        current = self.head
-        while current:
-            if current.time_slot.lower() == time_slot.lower():
-                self.waitlist.append((student_name, time_slot)) # Add to waitlist
-                return "Time Slot already booked. You have been Waitlisted"
-            current = current.next
-        # If not booked, create a new appointment
-        new_appointment = AppointmentNode(student_name, time_slot)
-        new_appointment.next = self.head
-        self.head = new_appointment
+        slot_key = time_slot.lower()
+        student_key = student_name.lower()
+        key = (student_key, slot_key)
+
+        if slot_key not in schedule['valid_slots']:
+            return "Invalid time slot"
+
+        if slot_key in self.booked_slots:
+            # Add to waitlist using Queue
+            if slot_key not in self.waitlist:
+                self.waitlist[slot_key] = Queue()
+            self.waitlist[slot_key].enqueue(student_name)
+            return "Time slot already booked. You have been Waitlisted"
+
+        # Book the appointment
+        new_node = AppointmentNode(student_name, time_slot)
+        new_node.next = self.head
+        if self.head:
+            self.prev_node_map[(self.head.student_name.lower(), self.head.time_slot.lower())] = new_node
+        self.head = new_node
+        if self.tail is None:
+            self.tail = new_node
+
+        self.booked_slots[slot_key] = new_node
+        self.student_slot_map[key] = new_node
+        self.prev_node_map[key] = None
+
         return "Booked"
 
     def cancel(self, student_name, time_slot, schedule):
-        current = self.head # Start from the head of the list
-        prev = None # Keep track of the previous node
-        # Check if the appointment exists
-        while current and (current.student_name.lower() != student_name.lower() or current.time_slot.lower() != time_slot.lower()): # Check for both student name and time slot
-            prev = current  
-            current = current.next 
-        if current is None:
+        slot_key = time_slot.lower()
+        student_key = student_name.lower()
+        key = (student_key, slot_key)
+
+        if key not in self.student_slot_map:
             return "No appointment found"
-        if prev is None: # If the appointment to cancel is the head
-            self.head = current.next 
+
+        node_to_remove = self.student_slot_map[key]
+        prev_node = self.prev_node_map.get(key)
+
+        # Remove node from list
+        if prev_node:
+            prev_node.next = node_to_remove.next
         else:
-            prev.next = current.next
+            self.head = node_to_remove.next
 
-        self.canceled_stack.append((student_name, time_slot)) # Add to canceled stack
+        # Update tail if needed
+        if node_to_remove == self.tail:
+            self.tail = prev_node
 
-        if self.waitlist: 
-            for i in range(len(self.waitlist)):
-                waitlisted_student, waitlisted_time_slot = self.waitlist.pop(0)
-                if waitlisted_time_slot.lower() == time_slot.lower():
-                    self.book(waitlisted_student, waitlisted_time_slot, schedule) # Rebook the waitlisted student
-                    return "Your appointment was canceled. A waitlisted student has been booked for that time slot."
-                else:
-                    self.waitlist.append((waitlisted_student, waitlisted_time_slot))
+        # Update prev_node_map for node after removed node
+        next_node = node_to_remove.next
+        if next_node:
+            self.prev_node_map[(next_node.student_name.lower(), next_node.time_slot.lower())] = prev_node
+
+        # Clean up maps
+        del self.student_slot_map[key]
+        del self.booked_slots[slot_key]
+        del self.prev_node_map[key]
+
+        self.canceled_stack.append((student_name, time_slot))
+
+        # Promote from waitlist
+        if slot_key in self.waitlist and not self.waitlist[slot_key].is_empty():
+            next_student = self.waitlist[slot_key].dequeue()
+            self.book(next_student, time_slot, schedule)
+            return f"Your appointment was canceled. {next_student} from the waitlist has been booked for {time_slot}."
+
         return "Canceled"
+
     def undo_cancel(self, student_name, schedule):
         if not self.canceled_stack:
             return "No canceled appointments to undo."
 
-         # Peek at the top of the stack
         last_student, last_time = self.canceled_stack[-1]
-
         if last_student.lower() != student_name.lower():
-             return "You can only undo your own cancellations."
+            return "You can only undo your own cancellations."
 
-        # Pop and rebook
         self.canceled_stack.pop()
         result = self.book(student_name, last_time, schedule)
         return f"Undo successful: {result} for {student_name} at {last_time}"
-
 
 # Professors
 professors = {
     "Dr. Smith": {
         'appointments': AppointmentList(),
-        'schedule': ["Monday 2PM", "Monday 3PM", "Monday 4PM", "Wednesday 3PM", "Wednesday 4PM", "Wednesday 5PM"],
+        'schedule': [
+            "Monday 2PM", "Monday 3PM", "Monday 4PM",
+            "Wednesday 3PM", "Wednesday 4PM", "Wednesday 5PM"
+        ],
         'email': 'dr.smith@example.com'
     },
     "Dr. Lee": {
         'appointments': AppointmentList(),
-        'schedule': ["Tuesday 1PM", "Tuesday 2PM", "Tuesday 3PM", "Thursday 10AM", "Thursday 11AM", "Thursday 12PM"],
+        'schedule': [
+            "Tuesday 1PM", "Tuesday 2PM", "Tuesday 3PM",
+            "Thursday 10AM", "Thursday 11AM", "Thursday 12PM"
+        ],
         'email': 'dr.lee@example.com'
     }
 }
 
+# Add valid_slots lookup table
+for prof in professors.values():
+    prof['valid_slots'] = {s.lower(): True for s in prof['schedule']}
+    
 # Login required 
 def login_required(f):
     @wraps(f)
