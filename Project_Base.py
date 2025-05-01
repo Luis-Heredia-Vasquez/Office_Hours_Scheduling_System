@@ -291,9 +291,12 @@ def cancel_appointment():
 
     time_slot = f"{day} {time}"
 
-    result = professors[professor_name]['appointments'].cancel(student_name, time_slot, professors[professor_name]['schedule'])
+    professor_info = professors[professor_name]
+
+    result = professor_info['appointments'].cancel(student_name, time_slot, professor_info)
     flash(f"Appointment {result} for {student_name} at {time_slot}", "info")
     return redirect(url_for('index'))
+
 
 
 @app.route('/undo_cancel')
@@ -301,13 +304,13 @@ def cancel_appointment():
 def undo_cancel():
     student_name = session['username']
 
-    for professor, details in professors.items():
-        result = details['appointments'].undo_cancel(student_name, details['schedule'])
+    for professor_name, professor_info in professors.items():
+        result = professor_info['appointments'].undo_cancel(student_name, professor_info)
 
         if result.startswith("Undo successful"):
             flash(result, "success")
             return redirect(url_for('index'))
-        elif result != "No canceled appointments to undo.":  # only show specific errors
+        elif result != "No canceled appointments to undo.":
             flash(result, "danger")
             return redirect(url_for('index'))
 
