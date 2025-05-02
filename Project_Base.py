@@ -136,7 +136,7 @@ class AppointmentList:
         if (slot_key, professor_key) in self.waitlist and not self.waitlist[(slot_key, professor_key)].is_empty():
             next_student = self.waitlist[(slot_key, professor_key)].dequeue()
             self.book(next_student, time_slot, professor_name, schedule)
-            return f"Your appointment was canceled. {next_student} from the waitlist has been booked."
+            return f"Your appointment was canceled. {next_student} from the waitlist has been booked"
 
         return "Canceled"
 
@@ -250,13 +250,16 @@ def index():
             current = current.next
 
         # Get the available slots based on booked time slots
+        # Get the available slots based on booked time slots
         booked_slots = set()
         current = details['appointments'].head
         while current:
-            booked_slots.add(current.time_slot.lower())
+            booked_slots.add(current.time_slot.lower())  # Keep lowercase for internal checks
             current = current.next
+
+        # Use the original case for available slots in the UI
         available_slots[professor] = [
-            slot for slot in details['valid_slots'] if slot.lower() not in booked_slots
+            slot for slot in details['schedule'] if slot.lower() not in booked_slots
         ]
 
     return render_template('index.html',
