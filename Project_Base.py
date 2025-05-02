@@ -24,9 +24,10 @@ def init_db():
 # Appointment Data Structures
 # Appointment Node
 class AppointmentNode:
-    def __init__(self, student_name, time_slot):
+    def __init__(self, student_name, time_slot, professor_name):
         self.student_name = student_name
         self.time_slot = time_slot
+        self.professor_name = professor_name  
         self.next = None
 
 # Queue for Waitlist
@@ -36,7 +37,7 @@ class Queue:
         self.tail = None
 
     def enqueue(self, student_name):
-        new_node = AppointmentNode(student_name, None)
+        new_node = AppointmentNode(student_name, None, None)  # No professor name needed for waitlist
         if self.tail:
             self.tail.next = new_node
         self.tail = new_node
@@ -60,46 +61,48 @@ class AppointmentList:
     def __init__(self):
         self.head = None
         self.tail = None
-        self.booked_slots = {}  # time_slot.lower() -> AppointmentNode
-        self.student_slot_map = {}  # (student.lower(), time.lower()) -> AppointmentNode
-        self.prev_node_map = {}  # (student.lower(), time.lower()) -> previous node
-        self.waitlist = {}  # time_slot.lower() -> Queue
-        self.canceled_stack = []  # stack of (student_name, time_slot)
+        self.booked_slots = {}  # (time_slot, professor_name) -> AppointmentNode
+        self.student_slot_map = {}  # (student_name, time_slot, professor_name) -> AppointmentNode
+        self.prev_node_map = {}  # (student_name, time_slot, professor_name) -> previous node
+        self.waitlist = {}  # (time_slot, professor_name) -> Queue
+        self.canceled_stack = []  # stack of (student_name, time_slot, professor_name)
 
-    def book(self, student_name, time_slot, schedule):
+    def book(self, student_name, time_slot, professor_name, schedule):
         slot_key = time_slot.lower()
         student_key = student_name.lower()
-        key = (student_key, slot_key)
+        professor_key = professor_name.lower()
+        key = (student_key, slot_key, professor_key)
 
         if slot_key not in schedule['valid_slots']:
             return "Invalid time slot"
 
-        if slot_key in self.booked_slots:
+        if (slot_key, professor_key) in self.booked_slots:
             # Add to waitlist using Queue
-            if slot_key not in self.waitlist:
-                self.waitlist[slot_key] = Queue()
-            self.waitlist[slot_key].enqueue(student_name)
-            return "Time slot already booked. You have been Waitlisted"
+            if (slot_key, professor_key) not in self.waitlist:
+                self.waitlist[(slot_key, professor_key)] = Queue()
+            self.waitlist[(slot_key, professor_key)].enqueue(student_name)
+            return "Time slot already booked. You have been waitlisted"
 
-        # Book the appointment
-        new_node = AppointmentNode(student_name, time_slot)
+        # Book the appointment 
+        new_node = AppointmentNode(student_name, time_slot, professor_name)
         new_node.next = self.head
         if self.head:
-            self.prev_node_map[(self.head.student_name.lower(), self.head.time_slot.lower())] = new_node
+            self.prev_node_map[(self.head.student_name.lower(), self.head.time_slot.lower(), professor_key)] = new_node
         self.head = new_node
         if self.tail is None:
             self.tail = new_node
 
-        self.booked_slots[slot_key] = new_node
+        self.booked_slots[(slot_key, professor_key)] = new_node
         self.student_slot_map[key] = new_node
         self.prev_node_map[key] = None
 
-        return "Booked"
+        return f"Booked with {professor_name}"
 
-    def cancel(self, student_name, time_slot, schedule):
+    def cancel(self, student_name, time_slot, professor_name, schedule):
         slot_key = time_slot.lower()
         student_key = student_name.lower()
-        key = (student_key, slot_key)
+        professor_key = professor_name.lower()
+        key = (student_key, slot_key, professor_key)
 
         if key not in self.student_slot_map:
             return "No appointment found"
@@ -120,35 +123,34 @@ class AppointmentList:
         # Update prev_node_map for node after removed node
         next_node = node_to_remove.next
         if next_node:
-            self.prev_node_map[(next_node.student_name.lower(), next_node.time_slot.lower())] = prev_node
+            self.prev_node_map[(next_node.student_name.lower(), next_node.time_slot.lower(), professor_key)] = prev_node
 
         # Clean up maps
         del self.student_slot_map[key]
-        del self.booked_slots[slot_key]
+        del self.booked_slots[(slot_key, professor_key)]
         del self.prev_node_map[key]
 
-        self.canceled_stack.append((student_name, time_slot))
+        self.canceled_stack.append((student_name, time_slot, professor_name))
 
         # Promote from waitlist
-       
-        if slot_key in self.waitlist and not self.waitlist[slot_key].is_empty():
-            next_student = self.waitlist[slot_key].dequeue()
-            self.book(next_student, time_slot, schedule)
-            return f"Your appointment was canceled. {next_student} from the waitlist has been booked"
-        else:
-            return "Canceled"
+        if (slot_key, professor_key) in self.waitlist and not self.waitlist[(slot_key, professor_key)].is_empty():
+            next_student = self.waitlist[(slot_key, professor_key)].dequeue()
+            self.book(next_student, time_slot, professor_name, schedule)
+            return f"Your appointment was canceled. {next_student} from the waitlist has been booked."
 
-    def undo_cancel(self, student_name, schedule):
+        return "Canceled"
+
+    def undo_cancel(self, student_name, professor_name, schedule):
         if not self.canceled_stack:
             return "No canceled appointments to undo."
 
-        last_student, last_time = self.canceled_stack[-1]
-        if last_student.lower() != student_name.lower():
+        last_student, last_time, last_professor = self.canceled_stack[-1]
+        if last_student.lower() != student_name.lower() or last_professor.lower() != professor_name.lower():
             return "You can only undo your own cancellations."
 
         self.canceled_stack.pop()
-        result = self.book(student_name, last_time, schedule)
-        return f"Undo successful: {result} for {student_name} on {last_time}"
+        result = self.book(student_name, last_time, last_professor, schedule)
+        return f"Undo successful: {result} for {student_name} with {last_professor} on {last_time}"
 
 # Professors
 professors = {
@@ -236,22 +238,25 @@ def logout():
 @login_required
 def index():
     user_appointments = []
+    available_slots = {}
+
+    # Check each professor's appointments and available slots
     for professor, details in professors.items():
+        # Get the list of appointments for the current professor
         current = details['appointments'].head
         while current:
             if current.student_name == session['username']:
                 user_appointments.append((professor, current.time_slot))
             current = current.next
 
-    available_slots = {}
-    for professor, details in professors.items():
+        # Get the available slots based on booked time slots
         booked_slots = set()
         current = details['appointments'].head
         while current:
             booked_slots.add(current.time_slot.lower())
             current = current.next
         available_slots[professor] = [
-            slot for slot in details['schedule'] if slot.lower() not in booked_slots
+            slot for slot in details['valid_slots'] if slot.lower() not in booked_slots
         ]
 
     return render_template('index.html',
@@ -278,9 +283,10 @@ def book_appointment():
         return redirect(url_for('index'))
 
     # Attempt to book the appointment
-    result = professor_info['appointments'].book(student_name, time_slot, professor_info)
+    result = professor_info['appointments'].book(student_name, time_slot, professor_name, professor_info)
     flash(f"Appointment: {result} for {student_name} on {time_slot}", "success")
     return redirect(url_for('index'))
+
 
 
 @app.route('/cancel', methods=['POST'])
@@ -295,9 +301,10 @@ def cancel_appointment():
 
     professor_info = professors[professor_name]
 
-    result = professor_info['appointments'].cancel(student_name, time_slot, professor_info)
+    result =  professor_info['appointments'].cancel(student_name, time_slot, professor_name, professor_info)
     flash(f"Appointment: {result} on {time_slot}", "info")
     return redirect(url_for('index'))
+
 
 
 
@@ -307,7 +314,7 @@ def undo_cancel():
     student_name = session['username']
 
     for professor_name, professor_info in professors.items():
-        result = professor_info['appointments'].undo_cancel(student_name, professor_info)
+        result = professor_info['appointments'].undo_cancel(student_name, professor_name, professor_info)
 
         if result.startswith("Undo successful"):
             flash(result, "success")
@@ -318,6 +325,7 @@ def undo_cancel():
 
     flash("No canceled appointments to undo.", "info")
     return redirect(url_for('index'))
+
 
 
 @app.route('/appointments')
