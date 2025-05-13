@@ -51,8 +51,4 @@ In order to prove the claim of O(1) time complexity, a benchmark was done, using
 *The results showed that all operations maintained near-constant execution time:*
 ![Screenshot_12-5-2025_193147_colab research google com](https://github.com/user-attachments/assets/c3183075-69b0-4ca7-bd64-ada8a6f0ca7d)
 
-
-
-
-
-
+The consistently low average runtimes show that all operations consistently execute within microseconds, demonstrating both speed and stability, providing empirical evidence of constant-time O(1) performance.The log-scaled plot below shows that execution times remained nearly constant across all 1,000 iterations, with only small fluctuations. These slight variations could be due to small delays in memory access. Despite these minor differences, the overall trend is flat, which supports our claim that each operation runs in constant time O(1). Yet, it is important to acknowledge that adding other functions may change the time complexity of the system. To make the timing data easier to interpret, the y-axis includes both scientific and decimal notation, highlighting that all operations are completed within a few microseconds.
