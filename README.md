@@ -32,7 +32,7 @@ This app uses custom-built data structures to manage appointment logic:
 - Gunicorn (for production deployment)
 - Git & GitHub
 
-## 🗂 Results
+## 📊 Results
 The system’s core operations—booking, canceling, undo cancel, and waitlisting— have O(1) time complexity, based on their use of custom data structures:
 - Hash tables for constant-time lookups
 - Singly linked lists for efficient insertions and deletions, supported by auxiliary dictionaries to track node references.
